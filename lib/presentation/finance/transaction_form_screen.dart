@@ -62,7 +62,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               loading: () => const LinearProgressIndicator(),
               error: (e, _) => Text('Erro: $e'),
               data: (patients) => DropdownButtonFormField<String>(
-                value: _selectedPatientId,
+                initialValue: _selectedPatientId,
                 decoration: const InputDecoration(labelText: 'Paciente *'),
                 items: patients.map((p) => DropdownMenuItem(value: p.id, child: Text(p.fullName))).toList(),
                 onChanged: (id) => setState(() => _selectedPatientId = id),
@@ -83,7 +83,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<PaymentMethod>(
-              value: _method,
+              initialValue: _method,
               decoration: const InputDecoration(labelText: 'Forma de pagamento'),
               items: PaymentMethod.values.map((m) => DropdownMenuItem(
                 value: m,

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/models/patient.dart';
 import 'patients_notifier.dart';
 import 'patient_form_screen.dart';
 
@@ -48,6 +47,7 @@ class PatientDetailScreen extends ConsumerWidget {
                   );
                   if (confirm == true && context.mounted) {
                     await ref.read(patientsProvider.notifier).archive(patientId);
+                    if (!context.mounted) return;
                     context.pop();
                   }
                 },
