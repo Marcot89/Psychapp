@@ -42,20 +42,19 @@ class FinanceNotifier extends AsyncNotifier<FinanceState> {
 
   @override
   Future<FinanceState> build() async {
-    final repo = ref.read(transactionRepositoryProvider);
     final now = DateTime.now();
 
     // Last 6 months including current
     final monthly = <MapEntry<DateTime, double>>[];
     for (int i = 5; i >= 0; i--) {
       final month = DateTime(now.year, now.month - i, 1);
-      final paid = await repo.getTotalPaidByMonth(month.year, month.month);
+      final paid = await _repo.getTotalPaidByMonth(month.year, month.month);
       monthly.add(MapEntry(month, paid));
     }
 
-    final transactions = await repo.getByMonth(now.year, now.month);
-    final totalPaid = await repo.getTotalPaidByMonth(now.year, now.month);
-    final totalPending = await repo.getTotalPendingByMonth(now.year, now.month);
+    final transactions = await _repo.getByMonth(now.year, now.month);
+    final totalPaid = await _repo.getTotalPaidByMonth(now.year, now.month);
+    final totalPending = await _repo.getTotalPendingByMonth(now.year, now.month);
 
     return FinanceState(
       transactions: transactions,

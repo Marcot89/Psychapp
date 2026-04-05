@@ -11,10 +11,12 @@ import 'transaction_form_screen.dart';
 class FinanceScreen extends ConsumerWidget {
   const FinanceScreen({super.key});
 
+  static final _currencyFmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final financeAsync = ref.watch(financeProvider);
-    final currencyFmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFmt = _currencyFmt;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Financeiro')),
@@ -85,13 +87,16 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _TransactionTile extends ConsumerWidget {
+  static final _dateFmt = DateFormat('dd/MM/yyyy');
+  static final _moneyFmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+
   final Transaction transaction;
   const _TransactionTile({required this.transaction});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = DateFormat('dd/MM/yyyy');
-    final currencyFmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final fmt = _dateFmt;
+    final currencyFmt = _moneyFmt;
 
     return Card(
       child: ListTile(
@@ -113,6 +118,8 @@ class _TransactionTile extends ConsumerWidget {
 }
 
 class _RevenueChart extends StatelessWidget {
+  static const _chartColor = Color(0xFF5856D6);
+
   final List<MapEntry<DateTime, double>> data;
   const _RevenueChart({required this.data});
 
@@ -198,19 +205,19 @@ class _RevenueChart extends StatelessWidget {
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      color: const Color(0xFF5856D6),
+                      color: _chartColor,
                       barWidth: 2.5,
                       dotData: FlDotData(
                         getDotPainter: (spot, _, __, ___) =>
                             FlDotCirclePainter(
                           radius: 4,
-                          color: const Color(0xFF5856D6),
+                          color: _chartColor,
                           strokeWidth: 0,
                         ),
                       ),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: const Color(0xFF5856D6).withValues(alpha: 0.1),
+                        color: _chartColor.withValues(alpha: 0.1),
                       ),
                     ),
                   ],
