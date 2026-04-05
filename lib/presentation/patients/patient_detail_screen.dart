@@ -9,6 +9,8 @@ import '../../domain/models/appointment.dart';
 import '../../domain/models/transaction.dart';
 import '../../app/providers.dart';
 
+const _kBrandPurple = Color(0xFF5856D6);
+
 // Loads appointments for a specific patient
 final _patientAppointmentsProvider =
     FutureProvider.family<List<Appointment>, String>((ref, patientId) async {
@@ -33,6 +35,10 @@ final _patientTransactionsProvider =
 class PatientDetailScreen extends ConsumerWidget {
   final String patientId;
   const PatientDetailScreen({super.key, required this.patientId});
+
+  static final _fmtDateTime = DateFormat('dd/MM/yyyy HH:mm', 'pt_BR');
+  static final _fmtDate = DateFormat('dd/MM/yyyy', 'pt_BR');
+  static final _fmtMoney = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -112,12 +118,11 @@ class PatientDetailScreen extends ConsumerWidget {
                       ),
                     );
                   }
-                  final fmt = DateFormat('dd/MM/yyyy HH:mm', 'pt_BR');
                   return Column(
                     children: appointments.map((a) => Card(
                       child: ListTile(
-                        leading: const Icon(Icons.event, color: Color(0xFF5856D6)),
-                        title: Text(fmt.format(a.startDate)),
+                        leading: const Icon(Icons.event, color: _kBrandPurple),
+                        title: Text(_fmtDateTime.format(a.startDate)),
                         subtitle: Text(a.type.name),
                         trailing: _statusChip(a.status),
                       ),
@@ -140,8 +145,6 @@ class PatientDetailScreen extends ConsumerWidget {
                       ),
                     );
                   }
-                  final fmtDate = DateFormat('dd/MM/yyyy', 'pt_BR');
-                  final fmtMoney = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
                   return Column(
                     children: txs.map((t) => Card(
                       child: ListTile(
@@ -149,8 +152,8 @@ class PatientDetailScreen extends ConsumerWidget {
                           t.isPaid ? Icons.check_circle : Icons.pending,
                           color: t.isPaid ? const Color(0xFF34C759) : Colors.orange,
                         ),
-                        title: Text(fmtMoney.format(t.amount)),
-                        subtitle: Text(fmtDate.format(t.date)),
+                        title: Text(_fmtMoney.format(t.amount)),
+                        subtitle: Text(_fmtDate.format(t.date)),
                         trailing: t.isPaid
                             ? const Text('Pago', style: TextStyle(color: Color(0xFF34C759)))
                             : const Text('Pendente', style: TextStyle(color: Colors.orange)),
@@ -190,7 +193,7 @@ class PatientDetailScreen extends ConsumerWidget {
     const colors = {
       AppointmentStatus.scheduled: Colors.blue,
       AppointmentStatus.confirmed: Colors.green,
-      AppointmentStatus.completed: Color(0xFF5856D6),
+      AppointmentStatus.completed: _kBrandPurple,
       AppointmentStatus.cancelled: Colors.red,
       AppointmentStatus.noShow: Colors.orange,
     };
