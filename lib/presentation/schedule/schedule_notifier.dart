@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/models/appointment.dart';
 import '../../domain/repositories/appointment_repository.dart';
+import '../../domain/repositories/patient_repository.dart';
 import '../../app/providers.dart';
 
 final weekAppointmentsProvider = AsyncNotifierProvider<ScheduleNotifier, List<Appointment>>(
@@ -11,6 +12,7 @@ final weekAppointmentsProvider = AsyncNotifierProvider<ScheduleNotifier, List<Ap
 
 class ScheduleNotifier extends AsyncNotifier<List<Appointment>> {
   AppointmentRepository get _repo => ref.read(appointmentRepositoryProvider);
+  PatientRepository get _patientRepo => ref.read(patientRepositoryProvider);
 
   @override
   Future<List<Appointment>> build() {
@@ -31,7 +33,7 @@ class ScheduleNotifier extends AsyncNotifier<List<Appointment>> {
     final existing = await _repo.getByPatient(patientId);
     final sessionNumber = existing.length + 1;
 
-    final appointment = Appointment(
+    var appointment = Appointment(
       id: const Uuid().v4(),
       patientId: patientId,
       startDate: startDate,
@@ -40,11 +42,25 @@ class ScheduleNotifier extends AsyncNotifier<List<Appointment>> {
       type: type,
       notes: notes,
     );
+
+    // Salva localmente primeiro (fonte de verdade)
     await _repo.save(appointment);
 
-    // Agenda notificações locais para esta sessão
-    await ref.read(notificationSchedulerProvider)
-        .scheduleForAppointment(appointment);
+    // Tenta sincronizar com Google Calendar (falha silenciosa)
+    final gcalService = ref.read(googleCalendarServiceProvider);
+    if (gcalService.isSignedIn) {
+      final patient = await _patientRepo.getById(patientId);
+      final patientName = patient?.fullName ?? 'Paciente';
+      final googleEventId = await gcalService.createEvent(appointment, patientName);
+      if (googleEventId != null) {
+        // Atualiza registro local com o ID do evento Google
+        appointment = appointment.copyWith(googleEventId: googleEventId);
+        await _repo.update(appointment);
+      }
+    }
+
+    // Agenda notificações locais
+    await ref.read(notificationSchedulerProvider).scheduleForAppointment(appointment);
 
     ref.invalidateSelf();
   }
@@ -55,17 +71,25 @@ class ScheduleNotifier extends AsyncNotifier<List<Appointment>> {
     final updated = appointment.copyWith(status: newStatus);
     await _repo.update(updated);
 
-    // Se cancelada, remove as notificações
     if (newStatus == AppointmentStatus.cancelled) {
-      await ref.read(notificationSchedulerProvider)
-          .cancelForAppointment(id);
+      await ref.read(notificationSchedulerProvider).cancelForAppointment(id);
+      // Remove do Google Calendar se existir
+      if (appointment.googleEventId != null) {
+        await ref.read(googleCalendarServiceProvider)
+            .deleteEvent(appointment.googleEventId!);
+      }
     }
 
     ref.invalidateSelf();
   }
 
   Future<void> delete(String id) async {
+    final appointment = await _repo.getById(id);
     await ref.read(notificationSchedulerProvider).cancelForAppointment(id);
+    if (appointment?.googleEventId != null) {
+      await ref.read(googleCalendarServiceProvider)
+          .deleteEvent(appointment!.googleEventId!);
+    }
     await _repo.delete(id);
     ref.invalidateSelf();
   }

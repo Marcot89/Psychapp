@@ -3,12 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:psychapp/domain/models/appointment.dart';
 import 'package:psychapp/domain/repositories/appointment_repository.dart';
+import 'package:psychapp/domain/repositories/patient_repository.dart';
 import 'package:psychapp/app/providers.dart';
 import 'package:psychapp/infrastructure/notifications/notification_scheduler.dart';
+import 'package:psychapp/data/google_calendar/google_calendar_service.dart';
 import 'package:psychapp/presentation/schedule/schedule_notifier.dart';
 
 class MockAppointmentRepository extends Mock implements AppointmentRepository {}
+class MockPatientRepository extends Mock implements PatientRepository {}
 class MockNotificationScheduler extends Mock implements NotificationScheduler {}
+class MockGoogleCalendarService extends Mock implements GoogleCalendarService {}
 class FakeAppointment extends Fake implements Appointment {}
 
 void main() {
@@ -16,15 +20,25 @@ void main() {
 
   group('ScheduleNotifier', () {
     late MockAppointmentRepository mockRepo;
+    late MockPatientRepository mockPatientRepo;
     late MockNotificationScheduler mockNotifications;
+    late MockGoogleCalendarService mockGcal;
     late ProviderContainer container;
 
     setUp(() {
       mockRepo = MockAppointmentRepository();
+      mockPatientRepo = MockPatientRepository();
       mockNotifications = MockNotificationScheduler();
+      mockGcal = MockGoogleCalendarService();
+
+      // Google Calendar desconectado por padrão nos testes
+      when(() => mockGcal.isSignedIn).thenReturn(false);
+
       container = ProviderContainer(overrides: [
         appointmentRepositoryProvider.overrideWithValue(mockRepo),
+        patientRepositoryProvider.overrideWithValue(mockPatientRepo),
         notificationSchedulerProvider.overrideWithValue(mockNotifications),
+        googleCalendarServiceProvider.overrideWithValue(mockGcal),
       ]);
     });
 
