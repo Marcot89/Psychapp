@@ -9,12 +9,28 @@ class FinanceState {
   final List<Transaction> transactions;
   final double totalPaid;
   final double totalPending;
+  final List<MapEntry<DateTime, double>> monthlyRevenue;
 
   const FinanceState({
     required this.transactions,
     required this.totalPaid,
     required this.totalPending,
+    this.monthlyRevenue = const [],
   });
+
+  FinanceState copyWith({
+    List<Transaction>? transactions,
+    double? totalPaid,
+    double? totalPending,
+    List<MapEntry<DateTime, double>>? monthlyRevenue,
+  }) {
+    return FinanceState(
+      transactions: transactions ?? this.transactions,
+      totalPaid: totalPaid ?? this.totalPaid,
+      totalPending: totalPending ?? this.totalPending,
+      monthlyRevenue: monthlyRevenue ?? this.monthlyRevenue,
+    );
+  }
 }
 
 final financeProvider = AsyncNotifierProvider<FinanceNotifier, FinanceState>(
@@ -24,15 +40,29 @@ final financeProvider = AsyncNotifierProvider<FinanceNotifier, FinanceState>(
 class FinanceNotifier extends AsyncNotifier<FinanceState> {
   TransactionRepository get _repo => ref.read(transactionRepositoryProvider);
 
-  int get _year => DateTime.now().year;
-  int get _month => DateTime.now().month;
-
   @override
   Future<FinanceState> build() async {
-    final transactions = await _repo.getByMonth(_year, _month);
-    final paid = await _repo.getTotalPaidByMonth(_year, _month);
-    final pending = await _repo.getTotalPendingByMonth(_year, _month);
-    return FinanceState(transactions: transactions, totalPaid: paid, totalPending: pending);
+    final repo = ref.read(transactionRepositoryProvider);
+    final now = DateTime.now();
+
+    // Last 6 months including current
+    final monthly = <MapEntry<DateTime, double>>[];
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final paid = await repo.getTotalPaidByMonth(month.year, month.month);
+      monthly.add(MapEntry(month, paid));
+    }
+
+    final transactions = await repo.getByMonth(now.year, now.month);
+    final totalPaid = await repo.getTotalPaidByMonth(now.year, now.month);
+    final totalPending = await repo.getTotalPendingByMonth(now.year, now.month);
+
+    return FinanceState(
+      transactions: transactions,
+      totalPaid: totalPaid,
+      totalPending: totalPending,
+      monthlyRevenue: monthly,
+    );
   }
 
   Future<void> add({
