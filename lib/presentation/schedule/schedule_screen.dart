@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/appointment.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/widgets/empty_state.dart';
 import 'schedule_notifier.dart';
 import 'appointment_form_screen.dart';
 
@@ -27,8 +28,9 @@ class ScheduleScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Erro: $e')),
         data: (appointments) {
           if (appointments.isEmpty) {
-            return const Center(
-              child: Text('Nenhuma sessão esta semana.\nToque em + para agendar.', textAlign: TextAlign.center),
+            return const EmptyState(
+              icon: Icons.event_note,
+              message: 'Nenhuma sessão nesta semana.\nToque em + para agendar.',
             );
           }
           return ListView.separated(

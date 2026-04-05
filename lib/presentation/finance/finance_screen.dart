@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../domain/models/transaction.dart';
 import '../../shared/theme/app_colors.dart';
+import '../../shared/widgets/empty_state.dart';
 import 'finance_notifier.dart';
 import 'transaction_form_screen.dart';
 
@@ -51,7 +52,10 @@ class FinanceScreen extends ConsumerWidget {
             _RevenueChart(data: state.monthlyRevenue),
             const SizedBox(height: 16),
             if (state.transactions.isEmpty)
-              const Center(child: Text('Nenhum lançamento este mês.'))
+              const EmptyState(
+                icon: Icons.receipt_long,
+                message: 'Nenhuma transação este mês.\nToque em + para registrar.',
+              )
             else
               ...state.transactions.map((t) => _TransactionTile(transaction: t)),
           ],

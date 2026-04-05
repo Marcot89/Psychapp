@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/patient.dart';
+import '../../shared/widgets/empty_state.dart';
 import 'patients_notifier.dart';
 import 'patient_form_screen.dart';
 import 'patient_detail_screen.dart';
@@ -73,7 +74,10 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (e, _) => Center(child: Text('Erro: $e')),
                     data: (patients) => patients.isEmpty
-                        ? const Center(child: Text('Nenhum paciente cadastrado.\nToque em + para adicionar.', textAlign: TextAlign.center))
+                        ? const EmptyState(
+                            icon: Icons.people_outline,
+                            message: 'Nenhum paciente cadastrado.\nToque em + para adicionar.',
+                          )
                         : _PatientList(patients: patients),
                   ),
           ),
