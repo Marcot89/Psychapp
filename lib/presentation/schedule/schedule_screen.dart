@@ -46,12 +46,13 @@ class ScheduleScreen extends ConsumerWidget {
 }
 
 class _AppointmentCard extends ConsumerWidget {
+  static final _fmt = DateFormat('EEE dd/MM HH:mm');
+
   final Appointment appointment;
   const _AppointmentCard({required this.appointment});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = DateFormat('EEE dd/MM HH:mm');
     final statusColor = _statusColor(appointment.status);
 
     return Card(
@@ -65,7 +66,7 @@ class _AppointmentCard extends ConsumerWidget {
           ),
         ),
         title: Text('Sessão #${appointment.sessionNumber}'),
-        subtitle: Text(fmt.format(appointment.startDate)),
+        subtitle: Text(_fmt.format(appointment.startDate)),
         trailing: PopupMenuButton<AppointmentStatus>(
           icon: const Icon(Icons.more_vert),
           onSelected: (status) => ref
