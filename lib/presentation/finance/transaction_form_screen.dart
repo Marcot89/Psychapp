@@ -52,7 +52,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final patientsAsync = ref.watch(patientsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar Pagamento')),
+      appBar: AppBar(title: const Text('Nova Cobrança')),
       body: Form(
         key: _formKey,
         child: ListView(
