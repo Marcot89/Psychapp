@@ -7,6 +7,7 @@ import '../data/local/drift_transaction_repository.dart';
 import '../domain/repositories/patient_repository.dart';
 import '../domain/repositories/appointment_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
+import '../infrastructure/notifications/notification_scheduler.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -24,4 +25,8 @@ final appointmentRepositoryProvider = Provider<AppointmentRepository>((ref) {
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return DriftTransactionRepository(ref.watch(databaseProvider));
+});
+
+final notificationSchedulerProvider = Provider<NotificationScheduler>((ref) {
+  return NotificationScheduler();
 });

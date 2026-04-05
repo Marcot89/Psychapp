@@ -41,17 +41,31 @@ class ScheduleNotifier extends AsyncNotifier<List<Appointment>> {
       notes: notes,
     );
     await _repo.save(appointment);
+
+    // Agenda notificações locais para esta sessão
+    await ref.read(notificationSchedulerProvider)
+        .scheduleForAppointment(appointment);
+
     ref.invalidateSelf();
   }
 
   Future<void> updateStatus(String id, AppointmentStatus newStatus) async {
     final appointment = await _repo.getById(id);
     if (appointment == null) return;
-    await _repo.update(appointment.copyWith(status: newStatus));
+    final updated = appointment.copyWith(status: newStatus);
+    await _repo.update(updated);
+
+    // Se cancelada, remove as notificações
+    if (newStatus == AppointmentStatus.cancelled) {
+      await ref.read(notificationSchedulerProvider)
+          .cancelForAppointment(id);
+    }
+
     ref.invalidateSelf();
   }
 
   Future<void> delete(String id) async {
+    await ref.read(notificationSchedulerProvider).cancelForAppointment(id);
     await _repo.delete(id);
     ref.invalidateSelf();
   }
