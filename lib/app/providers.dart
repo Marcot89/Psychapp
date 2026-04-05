@@ -8,6 +8,7 @@ import '../domain/repositories/patient_repository.dart';
 import '../domain/repositories/appointment_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
 import '../infrastructure/notifications/notification_scheduler.dart';
+import '../data/google_calendar/google_calendar_service.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -29,4 +30,8 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 
 final notificationSchedulerProvider = Provider<NotificationScheduler>((ref) {
   return NotificationScheduler();
+});
+
+final googleCalendarServiceProvider = Provider<GoogleCalendarService>((ref) {
+  return GoogleCalendarService();
 });
