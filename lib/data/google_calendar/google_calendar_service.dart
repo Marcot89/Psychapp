@@ -11,7 +11,14 @@ import '../../domain/models/appointment.dart';
 class GoogleCalendarService {
   static const _scopes = [gcal.CalendarApi.calendarScope];
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: _scopes);
+  // Client ID do projeto Google Cloud (app-psico-492422)
+  static const _clientId =
+      '252808342911-idtlssa3hmv1cguoko3srvtm35soj1hq.apps.googleusercontent.com';
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: _scopes,
+    clientId: _clientId,
+  );
 
   bool get isSignedIn => _googleSignIn.currentUser != null;
   String? get userEmail => _googleSignIn.currentUser?.email;
