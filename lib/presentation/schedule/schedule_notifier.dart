@@ -83,6 +83,27 @@ class ScheduleNotifier extends AsyncNotifier<List<Appointment>> {
     ref.invalidateSelf();
   }
 
+  /// Updates all editable fields of an existing appointment.
+  /// Cancels old notifications, reschedules new ones, and syncs to Google Calendar.
+  Future<void> updateAppointment(Appointment updated) async {
+    await _repo.update(updated);
+
+    // Cancel old notifications and reschedule with new times
+    final notifier = ref.read(notificationSchedulerProvider);
+    await notifier.cancelForAppointment(updated.id);
+    await notifier.scheduleForAppointment(updated);
+
+    // Sync to Google Calendar if connected
+    if (updated.googleEventId != null) {
+      final patient = await _patientRepo.getById(updated.patientId);
+      final patientName = patient?.fullName ?? 'Paciente';
+      await ref.read(googleCalendarServiceProvider)
+          .updateEvent(updated, patientName);
+    }
+
+    ref.invalidateSelf();
+  }
+
   Future<void> delete(String id) async {
     final appointment = await _repo.getById(id);
     await ref.read(notificationSchedulerProvider).cancelForAppointment(id);
