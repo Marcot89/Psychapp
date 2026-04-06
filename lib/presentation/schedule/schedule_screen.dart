@@ -67,14 +67,36 @@ class _AppointmentCard extends ConsumerWidget {
         ),
         title: Text('Sessão #${appointment.sessionNumber}'),
         subtitle: Text(_fmt.format(appointment.startDate)),
-        trailing: PopupMenuButton<AppointmentStatus>(
+        trailing: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
-          onSelected: (status) => ref
-              .read(weekAppointmentsProvider.notifier)
-              .updateStatus(appointment.id, status),
-          itemBuilder: (_) => AppointmentStatus.values
-              .map((s) => PopupMenuItem(value: s, child: Text(_statusLabel(s))))
-              .toList(),
+          onSelected: (value) {
+            if (value == 'edit') {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => AppointmentFormScreen(appointment: appointment),
+              ));
+            } else {
+              final status = AppointmentStatus.values
+                  .firstWhere((s) => s.name == value);
+              ref.read(weekAppointmentsProvider.notifier)
+                  .updateStatus(appointment.id, status);
+            }
+          },
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 18),
+                  SizedBox(width: 8),
+                  Text('Editar'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            ...AppointmentStatus.values.map((s) =>
+              PopupMenuItem(value: s.name, child: Text(_statusLabel(s))),
+            ),
+          ],
         ),
       ),
     );
