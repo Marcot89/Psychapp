@@ -8,7 +8,9 @@ import '../patients/patients_notifier.dart';
 import 'schedule_notifier.dart';
 
 class AppointmentFormScreen extends ConsumerStatefulWidget {
-  const AppointmentFormScreen({super.key});
+  /// If provided, the form opens in edit mode pre-filled with this appointment.
+  final Appointment? appointment;
+  const AppointmentFormScreen({super.key, this.appointment});
 
   @override
   ConsumerState<AppointmentFormScreen> createState() => _AppointmentFormScreenState();
@@ -17,13 +19,31 @@ class AppointmentFormScreen extends ConsumerStatefulWidget {
 class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
   final _formKey = GlobalKey<FormState>();
   Patient? _selectedPatient;
-  DateTime _startDate = DateTime.now().add(const Duration(hours: 1));
-  Duration _duration = const Duration(hours: 1);
-  SessionType _type = SessionType.individual;
-  final _notesCtrl = TextEditingController();
+  late DateTime _startDate;
+  late Duration _duration;
+  late SessionType _type;
+  late final TextEditingController _notesCtrl;
   bool _loading = false;
 
+  bool get _isEditing => widget.appointment != null;
   DateTime get _endDate => _startDate.add(_duration);
+
+  @override
+  void initState() {
+    super.initState();
+    final a = widget.appointment;
+    if (a != null) {
+      _startDate = a.startDate;
+      _duration = a.endDate.difference(a.startDate);
+      _type = a.type;
+      _notesCtrl = TextEditingController(text: a.notes);
+    } else {
+      _startDate = DateTime.now().add(const Duration(hours: 1));
+      _duration = const Duration(hours: 1);
+      _type = SessionType.individual;
+      _notesCtrl = TextEditingController();
+    }
+  }
 
   Future<void> _pickDateTime() async {
     final date = await showDatePicker(
@@ -45,19 +65,30 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedPatient == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecione um paciente')));
+    if (!_isEditing && _selectedPatient == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um paciente')));
       return;
     }
     setState(() => _loading = true);
 
-    await ref.read(weekAppointmentsProvider.notifier).add(
-      patientId: _selectedPatient!.id,
-      startDate: _startDate,
-      endDate: _endDate,
-      type: _type,
-      notes: _notesCtrl.text.trim(),
-    );
+    if (_isEditing) {
+      final updated = widget.appointment!.copyWith(
+        startDate: _startDate,
+        endDate: _endDate,
+        type: _type,
+        notes: _notesCtrl.text.trim(),
+      );
+      await ref.read(weekAppointmentsProvider.notifier).updateAppointment(updated);
+    } else {
+      await ref.read(weekAppointmentsProvider.notifier).add(
+        patientId: _selectedPatient!.id,
+        startDate: _startDate,
+        endDate: _endDate,
+        type: _type,
+        notes: _notesCtrl.text.trim(),
+      );
+    }
 
     if (mounted) Navigator.of(context).pop();
   }
@@ -74,23 +105,26 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
     final fmt = DateFormat('dd/MM/yyyy HH:mm');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova Sessão')),
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Editar Sessão' : 'Nova Sessão'),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            patientsAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('Erro: $e'),
-              data: (patients) => DropdownButtonFormField<Patient>(
-                initialValue: _selectedPatient,
-                decoration: const InputDecoration(labelText: 'Paciente *'),
-                items: patients.map((p) => DropdownMenuItem(value: p, child: Text(p.fullName))).toList(),
-                onChanged: (p) => setState(() => _selectedPatient = p),
-                validator: (v) => v == null ? 'Selecione um paciente' : null,
+            if (!_isEditing)
+              patientsAsync.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (e, _) => Text('Erro: $e'),
+                data: (patients) => DropdownButtonFormField<Patient>(
+                  initialValue: _selectedPatient,
+                  decoration: const InputDecoration(labelText: 'Paciente *'),
+                  items: patients.map((p) => DropdownMenuItem(value: p, child: Text(p.fullName))).toList(),
+                  onChanged: (p) => setState(() => _selectedPatient = p),
+                  validator: (v) => v == null ? 'Selecione um paciente' : null,
+                ),
               ),
-            ),
             const SizedBox(height: 12),
             ListTile(
               contentPadding: EdgeInsets.zero,
