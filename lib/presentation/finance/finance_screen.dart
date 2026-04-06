@@ -7,6 +7,7 @@ import '../../domain/models/transaction.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/widgets/empty_state.dart';
 import 'finance_notifier.dart';
+import 'pending_payments_screen.dart';
 import 'transaction_form_screen.dart';
 
 class FinanceScreen extends ConsumerWidget {
@@ -20,7 +21,20 @@ class FinanceScreen extends ConsumerWidget {
     final currencyFmt = _currencyFmt;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Financeiro')),
+      appBar: AppBar(
+        title: const Text('Financeiro'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.warning_amber),
+            tooltip: 'Pagamentos pendentes',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const PendingPaymentsScreen(),
+              ),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const TransactionFormScreen()),
